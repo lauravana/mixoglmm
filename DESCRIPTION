@@ -1,0 +1,20 @@
+Package: mixoglmm
+Type: Package
+Title: A shared random effects model for mixed outcomes
+Version: 0.1.0
+Author: Laura Vana
+Maintainer: The package maintainer <lvana@wu.ac.at>
+Description: A shared random effects model for normal and non-normal outcomes 
+  is proposed where flexible contraints can be set on the regression coefficients 
+  for each outcome. Conditional on the random effects, the additional dependence 
+  among the normal outcomes can be modeled through a correlation structure.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Imports:
+    Formula,
+    statmod,
+    mvtnorm,
+    numDeriv,
+    Matrix
+RoxygenNote: 6.1.1
