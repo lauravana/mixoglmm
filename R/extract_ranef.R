@@ -117,7 +117,7 @@ extract_ranef_means <- function(y1, tmp, family_nn, w, Ntrials, dims, gq) {
     phat   <- family_nn[[k]]$linkinv(eta)
     delta <- (phat %*% gq$weights)/ sqrt(pi)
     family_nn[[k]]$loglik(y1[, k], delta, w, Ntrials[, k])
-  }), na.rm  = T))
+  }), na.rm  = TRUE))
 
   ll <- lapply(seq_len(dims$K1),  function(k) {
     eta <- tmp$xbeta1[, k] + tmp$lambda1[k] * unodes
@@ -139,7 +139,7 @@ log_dens_u_cond_y <- function(u, y1, tmp, family_nn, w, Ntrials, dims, gq) {
     mu  <- family_nn[[k]]$linkinv(eta)
     family_nn[[k]]$loglik(y = y1[, k], mu = mu, w = w,
                           n = Ntrials[, k])
-  }), na.rm  = T)
+  }), na.rm = TRUE)
   Z <- rep(1, dims$N)
   unodes <- tcrossprod(Z, sqrt(2 * tmp$kappa2) * gq$nodes) + tmp$nu
   logf_delta <- sum(sapply(seq_len(dims$K1),  function(k) {
@@ -148,6 +148,6 @@ log_dens_u_cond_y <- function(u, y1, tmp, family_nn, w, Ntrials, dims, gq) {
     delta <- (phat %*% gq$weights)/ sqrt(pi)
     family_nn[[k]]$loglik(y = y1[, k], mu = delta, w = w,
                           n = Ntrials[, k])
-  }), na.rm  = T)
+  }), na.rm = TRUE)
   logf_mu + sum(dnorm(u, tmp$nu, sqrt(tmp$kappa2), log = TRUE)) - logf_delta
 }
