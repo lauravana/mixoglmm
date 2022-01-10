@@ -1,4 +1,3 @@
-
 mixoglmm_fit <- function(y, x, cor_structure,
                          constraints.beta,
                          constraints.lambda, w, Ntrials,
@@ -15,6 +14,7 @@ mixoglmm_fit <- function(y, x, cor_structure,
   x_constr <- do.call("cbind", lapply(seq_along(constraints.beta),
                                       function(p) kronecker(constraints.beta[[p]], x[, p])))
   obj <- list()
+
   ## correlation structure for gaussian responses
   obj$cor_structure <- init_fun(cor_structure, y = y2)
 
@@ -59,6 +59,7 @@ mixoglmm_fit <- function(y, x, cor_structure,
 
   ## Gauss-Hermite Quadrature
   gq <- statmod::gauss.quad(control$nGHQ, kind = "hermite")
+
   ## Optimize negative log likelihood
   obj$res <- nlminb(start_values, function(par) negloglik(par,
                                                        y1, y2, x_constr, #x2_constr,
@@ -103,18 +104,18 @@ mixoglmm_fit <- function(y, x, cor_structure,
   names(obj$parameters) <- c(names.beta, names.tau, names.gamma, names.omega, names.lambda)
   # --------------------
   J <- as.matrix(Matrix::bdiag(list(diag(obj$dim$Pstar), ## d tbeta/d beta
-                              1,#dttau2.tau(tau), ## d ttau2/d tau
+                              dttau2.tau(tau), ## d ttau2/d tau
                               dtcor.cor(obj$cor_structure, gamma),
                               dtomega.omega(omega),# diag(dtomega.omega(omega))),## d tomega/d omega
                               diag(obj$dims$nlambda) # d tlambda/d lambda
                               )))
-  H <- tparHess#crossprod(J, tparHess) %*% J
+  H <- crossprod(J, tparHess) %*% J
   obj$vcov <- tryCatch(chol2inv(chol(H)),
                        error=function(e) {
                          warning("\nCondition number close to zero! Hessian is approximated by nearest positive semidefinite matrix.\n")
                          chol2inv(chol(Matrix::nearPD(H)$mat))
                        }
-                       )#Jinv %*% tcrossprod(Hinv, Jinv)
+                       )
   ###########################
   obj$Ntrials <- Ntrials
   obj
@@ -138,7 +139,7 @@ negloglik <- function(par, y1, y2,  x_constr, #x2_constr,
     delta <- (phat %*% gq$weights)/ sqrt(pi)
     family_nn[[k]]$loglik(y = y1[, k], mu = delta, w = w,
                           n = Ntrials[, k])
-  }), na.rm  = T)
+  }), na.rm  = TRUE)
 
   nll2 <- - sum(sapply(ind_y2, function(id) {
      sum(w[id$ind.row] * id$normfun(tmp$y2errors[id$ind.row, id$ind.col],
@@ -146,10 +147,5 @@ negloglik <- function(par, y1, y2,  x_constr, #x2_constr,
                                  tmp$Sigma[id$ind.col, id$ind.col], log = TRUE))
   }))
 
- # nll2 <- - sum(w * dmvnorm(tmp$y2errors,
-#                                        mean = rep.int(0, dims$K2),
-  #                                       sigma = tmp$Sigma,
-  #                                       log = TRUE))
-  #print(c(nll2a, nll2))
   nll1 + nll2
 }
