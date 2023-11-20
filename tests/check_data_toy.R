@@ -22,7 +22,8 @@ fit <- mixoglmm(formula,
                                    X1 = cbind(c(1,1,1,1)),
                                    X2 = cbind(c(1,1,1,1))),
                 constraints.lambda = list(cbind(c(1,1,1,1))),
-                cor_struct_gauss = cor_general(~ 1))
+                cor_struct_gauss = cor_general(~ 1),
+                na.action = "na.pass")
 )
 p_mean <- extract_ranef(fit, method = "conditional means")
 
