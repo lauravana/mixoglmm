@@ -87,7 +87,7 @@ update_families <- function(families) {
 transform_parameters2 <- function(tpar, dims, y2, x_constr, constraints.lambda,
                                   offset, cor_structure,
                                   idnn.row, idnn.col, ind.y2) {
-  # print(tpar)
+
   beta   <-     tpar[seq_len(dims$Pstar)]
   tau2   <- exp(tpar[dims$Pstar + 1])
   gamma  <-     tpar[dims$Pstar + 1 + seq_len(dims$G)]
@@ -100,6 +100,7 @@ transform_parameters2 <- function(tpar, dims, y2, x_constr, constraints.lambda,
   R <- build_cor(cor_structure, gamma)
   Omega <- tcrossprod(omega) * R
   Sigma <- Omega + tau2 * tcrossprod(lambda2)
+
   Sigmainv <- tryCatch(chol2inv(chol(Sigma)))
   ## Xbeta
   xbeta  <- x_constr %*% beta + offset

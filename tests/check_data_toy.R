@@ -1,9 +1,9 @@
 tol <- 1e-4
 ####################
-devtools::install_github("lauravana/mixoglmm")
+#devtools::install_github("lauravana/mixoglmm")
 library(mixoglmm)
 data("data_toy", package = "mixoglmm")
-
+data_toy[1:2, c("y1", "y2", "y3")] <- NA
 ## cor_general
 formula <- (Be1 + y1 + y2 + y3 ~ 1 + X1 + X2)
 system.time(
@@ -22,7 +22,8 @@ fit <- mixoglmm(formula,
                                    X1 = cbind(c(1,1,1,1)),
                                    X2 = cbind(c(1,1,1,1))),
                 constraints.lambda = list(cbind(c(1,1,1,1))),
-                cor_struct_gauss = cor_general(~ 1))
+                cor_struct_gauss = cor_general(~ 1),
+                na.action = "na.pass")
 )
 p_mean <- extract_ranef(fit, method = "conditional means")
 

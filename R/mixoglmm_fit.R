@@ -129,6 +129,7 @@ negloglik <- function(par, y1, y2,  x_constr, #x2_constr,
                    family_nn,
                    dims, gq) {
   ## assign parameters
+
   tmp <- transform_parameters2(par, dims, y2, x_constr, constraints.lambda[[1]], offset,
                                cor_structure, idnn.row, idnn.col, ind_y2)
   unodes <- tcrossprod(Z, sqrt(2 * tmp$kappa2) * gq$nodes) + tmp$nu
@@ -142,9 +143,11 @@ negloglik <- function(par, y1, y2,  x_constr, #x2_constr,
   }), na.rm  = TRUE)
 
   nll2 <- - sum(sapply(ind_y2, function(id) {
-     sum(w[id$ind.row] * id$normfun(tmp$y2errors[id$ind.row, id$ind.col],
-                                 mean = rep.int(0, sum(id$ind.col)),
-                                 tmp$Sigma[id$ind.col, id$ind.col], log = TRUE))
+    ifelse(any(id$ind.col), 
+           sum(w[id$ind.row] * id$normfun(tmp$y2errors[id$ind.row, id$ind.col],
+                                          mean = rep.int(0, sum(id$ind.col)),
+                                          tmp$Sigma[id$ind.col, id$ind.col], log = TRUE)),
+           0)
   }))
 
   nll1 + nll2
