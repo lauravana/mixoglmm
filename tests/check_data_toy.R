@@ -1,9 +1,9 @@
 tol <- 1e-4
 ####################
-#devtools::install_github("lauravana/mixoglmm")
+devtools::install_github("lauravana/mixoglmm")
 library(mixoglmm)
 data("data_toy", package = "mixoglmm")
-data_toy[1:2, c("y1", "y2", "y3")] <- NA
+
 ## cor_general
 formula <- (Be1 + y1 + y2 + y3 ~ 1 + X1 + X2)
 system.time(
