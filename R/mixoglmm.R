@@ -24,6 +24,7 @@ NULL
 #' @importFrom statmod gauss.quad
 #' @importFrom numDeriv hessian
 #' @importFrom mvtnorm dmvnorm
+#' @importFrom optimx optimx
 #' @importFrom Matrix bdiag
 
 
@@ -198,7 +199,7 @@ print.mixoglmm <- function(x, call = FALSE, ...) {
   cat("Formula:\n")
   print(x$formula)
   cat("\n")
-  cat("Log-likelihood at convergence:", - x$res$objective, "\n")
+  cat("Log-likelihood at convergence:", - x$objective, "\n")
   pars <- x$parameters
   ## ------------------------------
   if (x$dims$Pstar == 0) {
@@ -250,7 +251,7 @@ print.mixoglmm <- function(x, call = FALSE, ...) {
 summary.mixoglmm <- function(object, call = FALSE, ...)
 {
   mat <- cbind.data.frame(c("nunits", object$dims$N), c("ndim", object$dims$M),
-                          c("logLik", round(-object$res$objective,2)))
+                          c("logLik", round(-object$objective,2)))
   ## extend coefficient table
   Pstar <- object$dims$Pstar
   nlambda <- object$dims$nlambda
@@ -328,14 +329,14 @@ summary.mixoglmm <- function(object, call = FALSE, ...)
 #' @export
 mixoglmm.control <- function(#start.values.beta = NULL,
                              nGHQ = 10L,
-                             solver.nlminb.control = list(eval.max = 10000, trace = 0),
+                             solver = "newuoa",
+                             solver.optimx.control = list(maxit = 10000, trace = 0, kkt = FALSE),
                              NR.control = list(maxIter = 500, gradTol = 1e-6, tolerance = 1e-8, trace = 1,
                                                innerCtrl = c("giveError", "warn"),
                                                maxLineIter = 50)
                              ){
-  if (is.null(solver.nlminb.control$eval.max)) solver.nlminb.control$eval.max <- 10000
-  if (is.null(solver.nlminb.control$iter.max)) solver.nlminb.control$iter.max <- 5000
-  if (is.null(solver.nlminb.control$trace)) solver.nlminb.control$trace <- 0
+  if (is.null(solver.optimx.control$maxit)) solver.optimx.control$maxit <- 10000
+  if (is.null(solver.optimx.control$trace)) solver.optimx.control$trace <- 0
   ## Controls for the Newton-Raphson Algorithm used in extracting the estimators of the random effects
   if (is.null(NR.control$maxIter)) NR.control$maxIter <- 100
   if (is.null(NR.control$tolerance)) NR.control$tolerance <- 1e-8
@@ -343,7 +344,8 @@ mixoglmm.control <- function(#start.values.beta = NULL,
   if (is.null(NR.control$maxLineIter)) NR.control$maxLineIter <- 50
   list(#start.values.beta = start.values.beta,
        nGHQ = nGHQ,
-       solver.nlminb.control = solver.nlminb.control,
+       solver = solver,
+       solver.optimx.control = solver.optimx.control,
        NR.control = NR.control)
 }
 #' @title vcov of Multivariate Ordinal Regression Models.

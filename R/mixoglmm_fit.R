@@ -61,16 +61,28 @@ mixoglmm_fit <- function(y, x, cor_structure,
   gq <- statmod::gauss.quad(control$nGHQ, kind = "hermite")
 
   ## Optimize negative log likelihood
-  obj$res <- nlminb(start_values, function(par) negloglik(par,
-                                                       y1, y2, x_constr, #x2_constr,
-                                                       Z, ind_y2,
-                                                       constraints.lambda,
-                                                       obj$cor_structure,
-                                                       w, Ntrials, offset,idnn.row, idnn.col,
-                                                       family_nn,#family_nn_ll,
-                                                       obj$dims, gq),
-                    control = control$solver.nlminb.control)
-
+  obj$res <- suppressWarnings(optimx(start_values, function(par) negloglik(par,
+                                                                         y1, y2, x_constr, #x2_constr,
+                                                                         Z, ind_y2,
+                                                                         constraints.lambda,
+                                                                         obj$cor_structure,
+                                                                         w, Ntrials, offset,idnn.row, idnn.col,
+                                                                         family_nn,#family_nn_ll,
+                                                                         obj$dims, gq),
+                                        method = control$solver,
+                                        hessian = FALSE,
+                                        control =  control$solver.optimx.control))
+  # obj$res <- nlminb(start_values, function(par) negloglik(par,
+  #                                                      y1, y2, x_constr, #x2_constr,
+  #                                                      Z, ind_y2,
+  #                                                      constraints.lambda,
+  #                                                      obj$cor_structure,
+  #                                                      w, Ntrials, offset,idnn.row, idnn.col,
+  #                                                      family_nn,#family_nn_ll,
+  #                                                      obj$dims, gq),
+  #                   control = control$solver.nlminb.control)
+  obj$par <- unlist(obj$res[1:length(start_values)])
+  obj$objective <- unlist(obj$res["value"])
   ## Compute Hessian numerically
   tparHess <- numDeriv::hessian(function(par) negloglik(par,
                                                  y1, y2, x_constr,
@@ -79,10 +91,10 @@ mixoglmm_fit <- function(y, x, cor_structure,
                                                  obj$cor_structure,
                                                  w, Ntrials, offset,idnn.row, idnn.col,
                                                  family_nn,
-                                                 obj$dims, gq), obj$res$par)
+                                                 obj$dims, gq), obj$par)
 
   ##---------------------
-  tpar   <- obj$res$par
+  tpar   <- obj$par
   beta   <- tpar[seq_len(obj$dims$Pstar)]
   ttau2 <- tpar[obj$dims$Pstar + 1]
   tau    <- exp(ttau2/2)

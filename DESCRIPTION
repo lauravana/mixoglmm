@@ -3,7 +3,7 @@ Type: Package
 Title: A shared random effects model for mixed outcomes
 Version: 0.1.0
 Author: Laura Vana
-Maintainer: The package maintainer <lvana@wu.ac.at>
+Maintainer: The package maintainer <laura.vana@tuwien.ac.at>
 Description: A shared random effects model for normal and non-normal outcomes 
   is proposed where flexible contraints can be set on the regression coefficients 
   for each outcome. Conditional on the random effects, the additional dependence 
@@ -16,5 +16,6 @@ Imports:
     statmod,
     mvtnorm,
     numDeriv,
-    Matrix
+    Matrix,
+    optimx
 RoxygenNote: 6.1.1

@@ -5,7 +5,7 @@
 #' @export
 extract_ranef <- function(object, method = c("conditional means", "conditional modes")) {
   ######################
-  par <- object$res$par
+  par <- object$par
   w <- object$weights
   Ntrials <- object$Ntrials
   control <- object$control
