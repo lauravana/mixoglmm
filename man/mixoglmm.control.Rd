@@ -4,17 +4,20 @@
 \alias{mixoglmm.control}
 \title{Control functions for mixoglmm()}
 \usage{
-mixoglmm.control(nGHQ = 10L, solver.nlminb.control = list(eval.max =
-  10000, trace = 0), NR.control = list(maxIter = 500, gradTol = 1e-06,
-  tolerance = 1e-08, trace = 1, innerCtrl = c("giveError", "warn"),
-  maxLineIter = 50))
+mixoglmm.control(
+  nGHQ = 10L,
+  solver = "newuoa",
+  solver.optimx.control = list(maxit = 10000, trace = 0, kkt = FALSE),
+  NR.control = list(maxIter = 500, gradTol = 1e-06, tolerance = 1e-08, trace = 1,
+    innerCtrl = c("giveError", "warn"), maxLineIter = 50)
+)
 }
 \arguments{
 \item{nGHQ}{integer for the number of quadrature points to be used in the Gauss-Hermite quadrature.}
 
-\item{solver.nlminb.control}{a list of control arguments to be passed to \code{\link{nlminb}}.}
-
 \item{NR.control}{a list of control arguments to be passed to the Newton Raphson routine for extracting the posterior modes of the random effects.}
+
+\item{solver.nlminb.control}{a list of control arguments to be passed to \code{\link{nlminb}}.}
 }
 \description{
 Control arguments are set.

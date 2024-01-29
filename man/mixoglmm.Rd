@@ -2,21 +2,32 @@
 % Please edit documentation in R/mixoglmm.R
 \name{mixoglmm}
 \alias{mixoglmm}
-\title{Fitting A Generalized Linear Model For Mixed Responses Of Type Gaussian, Poisson and
+\title{Fitting A Generalized Linear Model For Mixed Outcomes Of Type Gaussian, Poisson and
     Binomial Using A Shared Random Effect}
 \usage{
-mixoglmm(formula, data, families = NULL, cor_struct_gauss = NULL,
-  constraints.beta = NULL, constraints.lambda = NULL, Ntrials = NULL,
-  na.action, weights, offset = NULL, contrasts = NULL,
-  control = mixoglmm.control(), ...)
+mixoglmm(
+  formula,
+  data,
+  families = NULL,
+  cor_struct_gauss = NULL,
+  constraints.beta = NULL,
+  constraints.lambda = NULL,
+  Ntrials = NULL,
+  na.action,
+  weights,
+  offset = NULL,
+  contrasts = NULL,
+  control = mixoglmm.control(),
+  ...
+)
 }
 \arguments{
 \item{formula}{A formula as in the Formula package?}
 
 \item{data}{data}
 
-\item{families}{named list of families. Each element of the list is a family() as in glm. names must correspond to the responses s
-pecified in the formula.only gaussian(), binomial() and poisson() are supported so far.}
+\item{families}{named list of families. Each element of the list is a family() as in glm. names must correspond to the responses
+specified in the formula.only gaussian(), binomial() and poisson() are supported so far.}
 
 \item{cor_struct_gauss}{correlation structure of the gaussian responses}
 
@@ -42,7 +53,7 @@ pecified in the formula.only gaussian(), binomial() and poisson() are supported 
 an object of class mixoglmm
 }
 \description{
-mixoglmm is used to fit a model with shared random effects for normal and nonnormal random variables.
+mixoglmm is used to fit a model with shared random effects for Gaussian, Poisson and Binomial random variables.
 }
 \examples{
 sum(1:10)

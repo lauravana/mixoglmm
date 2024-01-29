@@ -4,7 +4,9 @@
 \name{data_toy}
 \alias{data_toy}
 \title{Data set toy example}
-\format{A data frame with 500 rows and 8 variables}
+\format{
+A data frame with 500 rows and 8 variables
+}
 \usage{
 data(data_toy)
 }

@@ -83,6 +83,9 @@ mixoglmm_fit <- function(y, x, cor_structure,
   #                   control = control$solver.nlminb.control)
   obj$par <- unlist(obj$res[1:length(start_values)])
   obj$objective <- unlist(obj$res["value"])
+  if (rho$optRes$convcode != 0){
+    warning("NO/FALSE CONVERGENCE - choose a different optimizer or different starting values.")
+  }
   ## Compute Hessian numerically
   tparHess <- numDeriv::hessian(function(par) negloglik(par,
                                                  y1, y2, x_constr,
@@ -155,7 +158,7 @@ negloglik <- function(par, y1, y2,  x_constr, #x2_constr,
   }), na.rm  = TRUE)
 
   nll2 <- - sum(sapply(ind_y2, function(id) {
-    ifelse(any(id$ind.col), 
+    ifelse(any(id$ind.col),
            sum(w[id$ind.row] * id$normfun(tmp$y2errors[id$ind.row, id$ind.col],
                                           mean = rep.int(0, sum(id$ind.col)),
                                           tmp$Sigma[id$ind.col, id$ind.col], log = TRUE)),

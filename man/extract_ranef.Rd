@@ -4,8 +4,7 @@
 \alias{extract_ranef}
 \title{Extract random effects for mixoglmm.}
 \usage{
-extract_ranef(object, method = c("conditional means",
-  "conditional modes"))
+extract_ranef(object, method = c("conditional means", "conditional modes"))
 }
 \arguments{
 \item{object}{object of class \code{'mixoglmm'}}
