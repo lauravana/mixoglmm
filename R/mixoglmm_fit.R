@@ -83,7 +83,7 @@ mixoglmm_fit <- function(y, x, cor_structure,
   #                   control = control$solver.nlminb.control)
   obj$par <- unlist(obj$res[1:length(start_values)])
   obj$objective <- unlist(obj$res["value"])
-  if (rho$optRes$convcode != 0){
+  if (opt$res$convcode != 0){
     warning("NO/FALSE CONVERGENCE - choose a different optimizer or different starting values.")
   }
   ## Compute Hessian numerically
