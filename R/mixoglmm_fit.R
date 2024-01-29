@@ -38,10 +38,10 @@ mixoglmm_fit <- function(y, x, cor_structure,
   ## for poisson we need to transform
   ty[, fams == "poisson"] <- (ty[, fams == "poisson"])^(1/3)
   start_beta <- glm(c(ty) ~ 0 + x_constr)$coefficients
-  start_values <- c(start_beta,#double(NCOL(x_constr)),
-                    double(1),
-                    attr(obj$cor_structure , "start"),
-                    double(K2),
+  start_values <- c(double(NCOL(x_constr)), #start_beta,#
+                    double(1), # kappa
+                    attr(obj$cor_structure , "start"), # rho
+                    double(K2),#log(apply(y2, 2, sd, na.rm = TRUE)),
                     double(NCOL(constraints.lambda[[1]]) - 1L) + 1L)
 
 
@@ -147,6 +147,7 @@ negloglik <- function(par, y1, y2,  x_constr, #x2_constr,
 
   tmp <- transform_parameters2(par, dims, y2, x_constr, constraints.lambda[[1]], offset,
                                cor_structure, idnn.row, idnn.col, ind_y2)
+  print(tmp$kappa2)
   unodes <- tcrossprod(Z, sqrt(2 * tmp$kappa2) * gq$nodes) + tmp$nu
   nll1 <- - sum(sapply(seq_len(dims$K1),  function(k) {
     #ynodes <- tcrossprod(Z, sqrt(2 * kappa2) * gq$nodes) + xbeta1[, i] + lambda1[i] * nu
