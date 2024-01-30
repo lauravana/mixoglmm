@@ -210,8 +210,14 @@ finalize.cor_struct <- function(eobj, tpar) {
 backtransf_spherical <- function(par, ndim, i = NULL){
   if (is.null(i)) i <- seq_along(par)
   R <- angmat <- matrix(1, ncol = ndim , nrow = ndim)
-  R[lower.tri(R)] <- R[upper.tri(R)] <- par
-  l <- t(chol(R))
+  R[lower.tri(R)] <- par
+  R[upper.tri(R)] <- t(R)[upper.tri(R)]
+  chR <- tryCatch(chol(R), error = function(e) NULL)
+  if (is.null(chR)) {
+    R <- Matrix::nearPD(R)$mat
+    chR <- chol(R)
+  }
+  l <- t(chR)
   angmat[-1,1] <- acos(l[-1,1])
   for (j in 2:(ndim - 1)){
     sinprod <- apply(sin(angmat[, seq_len(j-1), drop = FALSE]), 1, prod) ## denominator in division
