@@ -446,3 +446,62 @@ mixoglmm:::check(all.equal(p_mode_NA[1:5], c(0.0228643722742666,0.32540425315125
 mixoglmm:::check(all.equal(p_mean_NA[1:5], c(0.0231618203830685,0.325961459492032,-0.524242850627651,-0.587381861420012,0.101368469936255),
                            tol = tol, check.attributes = FALSE))
 
+
+### Missing values NAs for all normal responses
+set.seed(12345)
+data_toy_NA <- data_toy
+data_toy_NA[sample(1:nrow(data_toy_NA), 50), "y1"] <- NA
+data_toy_NA[sample(1:nrow(data_toy_NA), 50), "y2"] <- NA
+data_toy_NA[sample(1:nrow(data_toy_NA), 50), "Be1"] <- NA
+data_toy_NA[1:2, c("y1", "y2", "y3")] <- NA
+
+## cor_general
+formula <- (Be1 + y1 + y2 + y3 ~ 1 + X1 + X2)
+system.time(
+  fit_NA <- mixoglmm(formula, na.action = na.pass,
+                     families = list(
+                       Be1 = binomial(link="probit"),
+                       y1 = gaussian(),
+                       y2 = gaussian(),
+                       y3 = gaussian()),
+                     data = data_toy_NA,
+                     constraints.beta = list("(Intercept)" =
+                                               cbind(c(1,1,1,1),
+                                                     c(0,1,0,0),
+                                                     c(0,0,1,0),
+                                                     c(0,0,0,1)),
+                                             X1 = cbind(c(1,1,1,1)),
+                                             X2 = cbind(c(1,1,1,1))),
+                     constraints.lambda = list(cbind(c(1,1,1,1))),
+                     cor_struct_gauss = cor_general(~ 1),
+                     control = mixoglmm.control(solver = "nlminb"))
+)
+
+p_mean_NA <- extract_ranef(fit_NA, method = "conditional means")
+
+p_mode_NA <- extract_ranef(fit_NA, method = "conditional modes")
+
+options(digits = 22)
+ss <- summary(fit_NA)
+params <- rbind(ss$coefficients, ss$re.coefficients, ss$re.stddev, ss$gauss.corr, ss$gauss.stddev)
+
+mixoglmm:::check(all.equal(params[, 1], c(0.132218538111684, -0.978626693128789,
+                                          0.0064097339979871, 0.933678624189268,
+                                          -0.95045619907437, 0.472146298282196,
+                                          0.459974412610806, 0.898826552913782,
+                                          0.50696024737938, 0.457434347318497,
+                                          0.475033262876167, 0.958934924335357, 1.97503899585749),
+                           tol = tol, check.attributes = FALSE))
+mixoglmm:::check(all.equal(params[,2], c(0.0727961962852914, 0.0734404387232174,
+                                         0.0830238494223883, 0.113251093691898,
+                                         0.0288472278280454, 0.0267139872440934,
+                                         0.0213303869440451, 0.016651922547938, 0.0475522056910673,
+                                         0.0406716377851296, 0.0490695083287982, 0.0441898399900465, 0.0662363130748606),
+                           tol = tol, check.attributes = FALSE))
+
+## checked by hand with analytical for model, OK
+mixoglmm:::check(all.equal(p_mode_NA[1:5], c(0.108430692069076, 0.00917554058371092, -0.527846230532726, -0.590073477614332, 0.0951891261966428),
+                           tol = tol, check.attributes = FALSE))
+
+mixoglmm:::check(all.equal(p_mean_NA[1:5], c(0.108747283701767, 0.0098635493582526, -0.527846230532727, -0.590572476665559, 0.094417392959938),
+                           tol = tol, check.attributes = FALSE))
