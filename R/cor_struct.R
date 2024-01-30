@@ -207,9 +207,8 @@ finalize.cor_struct <- function(eobj, tpar) {
   R
 }
 ####
-backtransf_spherical <- function(par, ndim, i = NULL){
-  if (is.null(i)) i <- seq_along(par)
-  R <- angmat <- matrix(1, ncol = ndim , nrow = ndim)
+backtransf_spherical <- function(par, ndim){
+  R <- angmat <- diag(ndim)
   R[lower.tri(R)] <- par
   R[upper.tri(R)] <- t(R)[upper.tri(R)]
   chR <- tryCatch(chol(R), error = function(e) NULL)
@@ -220,21 +219,22 @@ backtransf_spherical <- function(par, ndim, i = NULL){
   l <- t(chR)
   angmat[-1,1] <- acos(l[-1,1])
   for (j in 2:(ndim - 1)){
-    sinprod <- apply(sin(angmat[, seq_len(j-1), drop = FALSE]), 1, prod) ## denominator in division
-    angmat[-seq_len(j), j] <- acos((l/sinprod)[-seq_len(j), j])
+    sin(angmat[, seq_len(j-1), drop = FALSE])
+    sinprod <- exp(rowSums(log(sin(angmat[-seq_len(j), seq_len(j-1), drop = FALSE]))))
+    lsj <- pmax(-1, pmin(l[-seq_len(j), j]/sinprod, 1))
+    angmat[-seq_len(j), j] <- acos(lsj)
   }
-  angdivpi <- angmat[lower.tri(angmat)]/pi
-  log(angdivpi/(1-angdivpi))[i]
+  ang <- angmat[lower.tri(angmat)]
+  log(ang/(pi-ang))
 }
 
 
 dtcor.cor.cor_general <-
   function(eobj, par) {
     ndim <- attr(eobj, "ndim")
-    x <- lapply(seq_along(par), function(i)
-      numDeriv::grad(function(par) backtransf_spherical(par, ndim, i), par))
-    do.call("rbind", x)
-  }
+    x <- numDeriv::jacobian(function(par) backtransf_spherical(par, ndim), par)
+    x
+}
 
 dtcor.cor.cor_equi <-
   function(eobj, par) {

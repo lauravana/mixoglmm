@@ -49,13 +49,17 @@ mixoglmm_fit <- function(y, x, cor_structure,
   ## for poisson we need to transform
   ty[, fams == "poisson"] <- (ty[, fams == "poisson"])^(1/3)
   start_beta <- glm(c(ty) ~ 0 + x_constr)$coefficients
-  start_values <- c(double(NCOL(x_constr)), #start_beta,#
-                    double(1), # kappa
-                    attr(obj$cor_structure , "start"), # rho
-                    double(K2),#log(apply(y2, 2, sd, na.rm = TRUE)),
-                    #double(NCOL(constraints.lambda) - 1L) + 1L),
-                    seq_len(obj$dims$nlambda)
-                    )
+  if (is.null(control$start_values)) {
+    start_values <- c(double(obj$dims$Pstar), #start_beta,#
+                      double(1), # tau
+                      attr(obj$cor_structure , "start"), # rho
+                      double(K2),#log(apply(y2, 2, sd, na.rm = TRUE)),
+                      double(obj$dims$nlambda) + 1L)
+  } else {
+    if (length(control$start_values) !=
+        (obj$dims$Pstar + 1 + obj$dims$G + K2 + obj$dims$nlambda)) stop("Starting values in control are not of correct length: Specify starting values for beta, log(tau), correlation structure, diagonal of Omega and lambdas")
+    start_values <- control$start_values
+  }
 
 
   Z <- rep.int(1, N)
@@ -97,7 +101,8 @@ mixoglmm_fit <- function(y, x, cor_structure,
   obj$par <- unlist(obj$res[1:length(start_values)])
   obj$objective <- unlist(obj$res["value"])
   if (obj$res$convcode != 0){
-    warning("NO/FALSE CONVERGENCE - choose a different optimizer or different starting values.")
+    print(obj$res)
+    warning("NO/FALSE CONVERGENCE - choose a different optimizer, increase iterations or use different starting values.")
   }
   ## Compute Hessian numerically
   tparHess <- numDeriv::hessian(function(par) negloglik(par,
@@ -112,7 +117,7 @@ mixoglmm_fit <- function(y, x, cor_structure,
   ##---------------------
   tpar   <- obj$par
   beta   <- tpar[seq_len(obj$dims$Pstar)]
-  ttau2 <- tpar[obj$dims$Pstar + 1]
+  ttau2 <-  tpar[obj$dims$Pstar + 1]
   tau    <- exp(ttau2/2)
   gamma  <- tpar[obj$dims$Pstar + 1 + seq_len(obj$dims$G)]
   gamma  <- transf_cor(obj$cor_structure, gamma)
@@ -133,6 +138,7 @@ mixoglmm_fit <- function(y, x, cor_structure,
   obj$parameters <- c(beta, tau, gamma, omega, lambda)
   names(obj$parameters) <- c(names.beta, names.tau, names.gamma, names.omega, names.lambda)
   # --------------------
+  if (TRUE) {
   J <- as.matrix(Matrix::bdiag(list(diag(obj$dim$Pstar), ## d tbeta/d beta
                               dttau2.tau(tau), ## d ttau2/d tau
                               dtcor.cor(obj$cor_structure, gamma),
@@ -146,6 +152,7 @@ mixoglmm_fit <- function(y, x, cor_structure,
                          chol2inv(chol(Matrix::nearPD(H)$mat))
                        }
                        )
+  }
   ###########################
   obj$Ntrials <- Ntrials
   obj$constraints.lambda <- constraints.lambda
