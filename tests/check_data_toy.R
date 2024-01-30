@@ -22,12 +22,12 @@ fit <- mixoglmm(formula,
                                            c(0,0,0,1)),
                                    X1 = cbind(c(1,1,1,1)),
                                    X2 = cbind(c(1,1,1,1))),
-                constraints.lambda = list(cbind(c(1,1,1,1))),
                 cor_struct_gauss = cor_general(~ 1),
+                control = mixoglmm.control(solver = "nlminb"),
                 na.action = "na.pass")
 )
 
-fit
+summary(fit)
 
 p_mean <- extract_ranef(fit, method = "conditional means")
 
@@ -36,43 +36,41 @@ p_mode <- extract_ranef(fit, method = "conditional modes")
 options(digits = 22)
 ss <- summary(fit)
 betas <- ss$coefficients
-mixoglmm:::check(all.equal(betas[, 1], c(0.15810395787427153346805, -1.00466052811284556334215, -0.01116040877696803171326,
-                                          0.90714765855466683586172, -0.95719603771244987644451,  0.47742849573108264715771),
+mixoglmm:::check(all.equal(betas[, 1], c(0.158484783477795, -1.00497362867322, -0.0114735251139953, 0.906837185153123, -0.957741880351057, 0.477713149269369),
                         tol = tol, check.attributes = FALSE))
 
-mixoglmm:::check(all.equal(betas[, 2], c(0.07068215354233951808194, 0.06915542459257395524475, 0.07848438137840953177093,
-                                         0.11036586419882268850223, 0.02778705688490125044754, 0.02561253820371892087060),
+mixoglmm:::check(all.equal(betas[, 2], c(0.0708767934490218, 0.0690816934779963, 0.0780015574878195, 0.110764183375751, 0.0278115549330782, 0.0256187432672813),
                            tol = tol, check.attributes = FALSE))
 tau <- ss$re.stddev
-mixoglmm:::check(all.equal(tau[, 1], c(0.5188263237486250289976),
+mixoglmm:::check(all.equal(tau[, 1], c(0.5287064818297940727021),
                            tol = tol, check.attributes = FALSE))
-mixoglmm:::check(all.equal(tau[, 2], c(0.02179122929320004634079),
+mixoglmm:::check(all.equal(tau[, 2], c(0.02598187202672989568053),
                            tol = tol, check.attributes = FALSE))
 
 gamma <- ss$gauss.corr
-mixoglmm:::check(all.equal(gamma[, 1], c(0.9321358250970666059487, 0.5261342904515758922557, 0.4405145464523918530375),
+mixoglmm:::check(all.equal(gamma[, 1], c(0.912465777477577, 0.557376891603283, 0.45042892023527),
                            tol = tol, check.attributes = FALSE))
-mixoglmm:::check(all.equal(gamma[, 2], c(.02864768955792041521535, 0.05479472138656688723346, 0.04179995102067527584788),
+mixoglmm:::check(all.equal(gamma[, 2], c(0.0507491111477424, 0.140651966746755, 0.0732447271450007),
                            tol = tol, check.attributes = FALSE))
 
 omega <- ss$gauss.stddev
-mixoglmm:::check(all.equal(omega[,1], c(.4111618152678951365608, 0.9261298856620481245727, 1.9667560746160377416203),
+mixoglmm:::check(all.equal(omega[,1], c(0.400746553816486, 0.902989385810695, 1.97639376865566),
                            tol = tol, check.attributes = FALSE))
-mixoglmm:::check(all.equal(omega[,2], c(0.05386543183786190319706, 0.04251328757939506347574, 0.06668199753098857929245 ),
+mixoglmm:::check(all.equal(omega[,2], c(0.0617308862529334, 0.0694279530110146, 0.0872236299701398),
                            tol = tol, check.attributes = FALSE))
 ## checked by hand with analytical for model, OK
-mixoglmm:::check(all.equal(p_mode[1:10], c(-0.03657226644452135633223,  0.41696084576011005484730,
-                                           -0.66728045612087527604928, -0.67384220575719233625733,
-                                           -0.08249740059866392249965,  0.21076870849528930862427,
-                                            0.54600269860613825922968, -0.31662470249903268415537,
-                                           -0.37946869284840273328641, -0.40350412012666669880900),
+mixoglmm:::check(all.equal(p_mode[1:10], c(0.00336105350572743, 0.391727736115974,
+                                           -0.721716498058259, -0.766074619316724,
+                                           -0.0401553072417684, 0.234808625487268,
+                                            0.542031250106634, -0.285321350518882,
+                                           -0.416422405299797, -0.36408292291156),
                         tol = tol, check.attributes = FALSE))
 
-mixoglmm:::check(all.equal(p_mean[1:10], c(-0.03646632621432691762076,  0.41713673889855279464101,
-                                           -0.66756018472360567628243, -0.67403006182017211056490,
-                                           -0.08277753080010349928664,  0.21104612029620792301721,
-                                            0.54619159047551812946608, -0.31689866438335051457287,
-                                           -0.37972961720704728749709, -0.40372548667848129344549),
+mixoglmm:::check(all.equal(p_mean[1:10], c(0.00350347290277018, 0.391965194525711,
+                                           -0.722084418004382, -0.76633375648837,
+                                           -0.0405232571810766, 0.235173742751026,
+                                            0.542280842542217, -0.285678690585022,
+                                           -0.416768301204705, -0.364367369820741),
                         tol = tol, check.attributes = FALSE))
 
 ## cor_equi
@@ -92,6 +90,7 @@ system.time(
                                           X1 = cbind(c(1,1,1,1)),
                                           X2 = cbind(c(1,1,1,1))),
                   constraints.lambda = list(cbind(c(1,1,1,1))),
+                  control = mixoglmm.control(solver = "nlminb"),
                   cor_struct_gauss = cor_equi())
 )
 p_mean <- extract_ranef(fit, method = "conditional means")
@@ -100,27 +99,16 @@ p_mode <- extract_ranef(fit, method = "conditional modes")
 
 ss <- summary(fit)
 params <- rbind(ss$coefficients, ss$re.coefficients, ss$re.stddev, ss$gauss.corr, ss$gauss.stddev)
-mixoglmm:::check(all.equal(params[, 1], c(0.15613853080842826637209, -1.00501706525141965009595, -0.01151631728663744282104,
-                                          0.90679996923632222305400, -0.94081208446587316629461,  0.46634502790876664057862,
-                                          1.00000000000000000000000,  0.62386623796274509601290,  0.42506242050030018653217,
-                                          0.18727608994427666355698, 0.63749735403715324100204,  1.88748503954429769358114),
+mixoglmm:::check(all.equal(params[, 1], c(0.156138650919738, -1.005016745771, -0.0115169813174175, 0.906790157324389, -0.940811562734566, 0.466343692934543, 0.623865010066864, 0.425064831814034, 0.187280559847254, 0.637498362466582, 1.88748737292809),
                            tol = tol, check.attributes = FALSE))
 
-mixoglmm:::check(all.equal(params[, 2], c(0.07229196554277539377154, 0.06708447634324424257990, 0.07240848017245393730690,
-                                          0.10749596154824477001188, 0.03155247317500815829039, 0.02925049207892149033539,
-                                          0.00000000000000000000000, 0.01556510176026645528302, 0.06145285879260477951425,
-                                          0.04293345035792595076884, 0.03275504675804622595203, 0.06876636734131037764772 ),
+mixoglmm:::check(all.equal(params[, 2], c(0.0722919534052524, 0.0670845111475402, 0.0724085092926511, 0.107496051343685, 0.0315524688271646, 0.0292504887128358, 0.0155649900950424, 0.0614512681657186, 0.0429320568939804, 0.0327546183449962, 0.0687659552733108),
                            tol = tol, check.attributes = FALSE))
 
-mixoglmm:::check(all.equal(p_mode[1:10], c(-0.11680462800486851593362, 0.42605573208262470519259, -1.24699041281340772258091,
-                                           -1.59524213999611497172282, 0.09478470954780673918272,  0.46011961512196714041423,
-                                           0.49666922040871896992797, -0.38180231760090155290754,
-                                           -0.62940541466724131414168, -0.02087886319661238013201 ),
+mixoglmm:::check(all.equal(p_mode[1:10], c(-0.116802808054344, 0.426053650188658, -1.24698845409761, -1.59523917936706, 0.094782598702335, 0.460117032784326, 0.496668696664618, -0.381800665365676, -0.629407140391796, -0.0208800299639348),
                            tol = tol, check.attributes = FALSE))
 
-mixoglmm:::check(all.equal(p_mean[1:10], c(-0.11676107521566807256885,  0.42613108333816673845007, -1.24709647099828679905897, -1.59535854817539046734964,
-                                           0.09466707711203618813567,  0.46023802097176974568171,  0.49675403299826370595582, -0.38191954281375029012224,
-                                           -0.62952239136842547129191, -0.02095565193527237912718),
+mixoglmm:::check(all.equal(p_mean[1:10], c(-0.11675925138479, 0.426129008325903, -1.24709452168075, -1.59535559753372, 0.0946649560974065, 0.460235448911945, 0.496753516810754, -0.381917900668997, -0.629524127208963, -0.0209568253587547),
                            tol = tol, check.attributes = FALSE))
 
 ## cor_ident
@@ -139,6 +127,7 @@ system.time(
                                                   c(0,0,0,1)),
                                           X1 = cbind(c(1,1,1,1)),
                                           X2 = cbind(c(1,1,1,1))),
+                  control = mixoglmm.control(solver = "nlminb"),
                   constraints.lambda = list(cbind(c(1,1,1,1))),
                   cor_struct_gauss = cor_ident())
 )
@@ -149,12 +138,12 @@ p_mode <- extract_ranef(fit, method = "conditional modes")
 ss <- summary(fit)
 params <- rbind(ss$coefficients, ss$re.coefficients, ss$re.stddev, ss$gauss.corr, ss$gauss.stddev)
 mixoglmm:::check(all.equal(params[, 1], c(1.565550788263897208363e-01, -1.005055677165627825431e+00, -1.155608614217086375919e-02,  9.067579782146614197913e-01,
-                                          -9.449493971975334583036e-01, 4.674549843605066978824e-01,  1.000000000000000000000e+00,  6.642033527501332024201e-01,
+                                          -9.449493971975334583036e-01, 4.674549843605066978824e-01,   6.642033527501332024201e-01,
                                           1.843609848911476311586e-05,  5.629183885736568360159e-01,  1.785009068471818283186e+00),
                            tol = tol, check.attributes = FALSE))
 
 mixoglmm:::check(all.equal(params[, 2], c(0.07292725470527808284693, 0.06646600503762277456499, 0.07107379297895902170445, 0.10387610209229070079573,
-                                          0.03229450514040876213384, 0.02997892096909285722384, 0.00000000000000000000000, 0.01395089666318996210470,
+                                          0.03229450514040876213384, 0.02997892096909285722384,  0.01395089666318996210470,
                                           0.01856958157168214079702, 0.01780104259379940156993, 0.05644694413839976970815 ),
                            tol = tol, check.attributes = FALSE))
 
@@ -182,6 +171,7 @@ fit_logit <- mixoglmm(formula2,
                 data = data_toy,
                 constraints.beta = list("(Intercept)" = cbind(c(1,1)),
                                    X1 = cbind(c(1,1))),
+                control = mixoglmm.control(solver = "nlminb"),
                 cor_struct_gauss = cor_ident(~ 1))
 
 p_mean <- extract_ranef(fit_logit, method = "conditional means")
@@ -192,18 +182,14 @@ ss <- summary(fit_logit)
 params <- rbind(ss$coefficients, ss$re.coefficients, ss$re.stddev, ss$gauss.corr, ss$gauss.stddev)
 
 # paste0(params[, 1], collapse = ", ")
-mixoglmm:::check(all.equal(params[, 1], c(-0.954662618387938, -0.848290475403047, 1,
-                                          0.184391890658427, 2.97914016287556, 0.714841872699901),
+mixoglmm:::check(all.equal(params[, 1], c(-0.908585633899121, -0.90842424754779, 0.899860049834889, 0.000270830799918245),
                         tol = tol, check.attributes = FALSE))
-mixoglmm:::check(all.equal(params[, 2], c(0.037393571603032, 0.0439957011026461, 0, 0.0479925611997275,
-                                          1.85470557715777, 0.0431556051459695),
+mixoglmm:::check(all.equal(params[, 2], c(0.0362842747538179, 0.0392673999459461, 0.0128036875880352, 0.396948577950672),
                            tol = tol, check.attributes = FALSE))
 
-mixoglmm:::check(all.equal(p_mode[1:5], c(0.9309770137707257253723, 2.8064760580986050086949, -3.6623351637230201482964,
-                                          -4.5272695540600462749126,-1.8731262869888314348543),
+mixoglmm:::check(all.equal(p_mode[1:5], c(-1.11234951443344, 1.11024379553635, -1.84121818499512, -2.34145574116911, -0.83125978690579),
                            tol = tol, check.attributes = FALSE))
-mixoglmm:::check(all.equal(p_mean[1:5], c(0.877830973109587797687,  3.149437301772087582918, -3.852426316300728625919,
-                                          -4.740299800718964284840, -2.202529149853830858774),
+mixoglmm:::check(all.equal(p_mean[1:5], c(-1.11234951443344, 1.11024379553635, -1.84121818499512, -2.34145574116911, -0.831259786905791),
                            tol = tol, check.attributes = FALSE))
 
 ##############
@@ -215,6 +201,7 @@ fit_cloglog <- mixoglmm(formula2,
                       data = data_toy,
                       constraints.beta = list("(Intercept)" = cbind(c(1,1)),
                                               X1 = cbind(c(1,1))),
+                      control = mixoglmm.control(solver = "nlminb"),
                       cor_struct_gauss = cor_ident(~ 1))
 
 p_mean <- extract_ranef(fit_cloglog, method = "conditional means")
@@ -224,34 +211,17 @@ p_mode <- extract_ranef(fit_cloglog, method = "conditional modes")
 ss <- summary(fit_cloglog)
 params <- rbind(ss$coefficients, ss$re.coefficients, ss$re.stddev, ss$gauss.corr, ss$gauss.stddev)
 
-mixoglmm:::check(all.equal(params[, 1], c(-0.914210189304185, -0.903688665092929, 1
-                                          , 0.46870167199286, 1.36029574788433, 0.635041794662754),
+mixoglmm:::check(all.equal(params[, 1], c(-0.8934791679824, -0.916943514097205, 0.840507059325738, 0.322562752501028),
                         tol = tol, check.attributes = FALSE))
-mixoglmm:::check(all.equal(params[, 2], c(0.0382566560100977, 0.0407437133603616, 0,
-                                          0.12137012853852, 0.328398892202561, 0.0740727803639353),
+mixoglmm:::check(all.equal(params[, 2], c(0.0381868893225489, 0.0397881886293485, 0.0424152202420524, 0.127722053583628),
                            tol = tol, check.attributes = FALSE))
 
-mixoglmm:::check(all.equal(p_mode[1:5], c(-0.3643462418018307835688,  1.2993685252252837880604, -2.0188697112039601933020,
-                                          -2.5928120395154437005658, -1.0012653529242976357949),
+mixoglmm:::check(all.equal(p_mode[1:5], c(-0.896174354654218, 0.966246555527126, -1.62666675155525, -2.08122866117328, -0.751378491961517),
                            tol = tol, check.attributes = FALSE))
-mixoglmm:::check(all.equal(p_mean[1:5], c(-0.3978179417637880410652,  1.3654841614455761611424, -2.0445665210221735108576,
-                                          -2.6342688498182487144561, -1.0480157963259864040140),
+mixoglmm:::check(all.equal(p_mean[1:5], c(-0.896425961050744, 0.96706952606964, -1.62702932057134, -2.08197922280016, -0.752050050461492),
                            tol = tol, check.attributes = FALSE))
 
 
-## log
-# fit_log <- mixoglmm(formula2,
-#                     families = list(
-#                       Be1 = binomial(link="log"),
-#                       y1 = gaussian()),
-#                     data = data_toy,
-#                     constraints.beta = list("(Intercept)" = cbind(c(1,1)),
-#                                             X1 = cbind(c(1,1))),
-#                     cor_struct_gauss = cor_general(~ 1))
-#
-# p_mean <- extract_ranef(fit_log, method = "conditional means")
-#
-# p_mode <- extract_ranef(fit_log, method = "conditional modes")
 
 ## Cauchit
 fit_cauchit <- mixoglmm((Be1 + y3 ~ X1 + X2),
@@ -264,6 +234,7 @@ fit_cauchit <- mixoglmm((Be1 + y3 ~ X1 + X2),
                                                 X1 = cbind(c(1,1)),
                                                 X2 = cbind(c(1,1))),
                         constraints.lambda = list(cbind(c(1,1))),
+                        control = mixoglmm.control(solver = "nlminb"),
                         cor_struct_gauss = cor_general(~ 1))
 
 p_mean <- extract_ranef(fit_cauchit, method = "conditional means")
@@ -274,11 +245,11 @@ ss <- summary(fit_cauchit)
 params <- rbind(ss$coefficients, ss$re.coefficients, ss$re.stddev, ss$gauss.corr, ss$gauss.stddev)
 
 mixoglmm:::check(all.equal(params[, 1], c(0.149226223992418721709, 0.945156020213949732423, -1.241323798981201598224,
-                                          0.579684298052147384261, 1.0000000000000000000000,  0.321700803542295687976,
+                                          0.579684298052147384261,  0.321700803542295687976,
                                           1.388005722277994236080),
                            tol = tol, check.attributes = FALSE))
 mixoglmm:::check(all.equal(params[, 2], c(0.101942986184902661950, 0.133205452009057229157, 0.085435873751396690379,
-                                          0.072062241895121767477, 0.00000000000000000000000, 0.051612301832824669656,
+                                          0.072062241895121767477, 0.051612301832824669656,
                                           0.043391245093964039836),
                            tol = tol, check.attributes = FALSE))
 
@@ -435,19 +406,24 @@ options(digits = 22)
 ss <- summary(fit_NA)
 params <- rbind(ss$coefficients, ss$re.coefficients, ss$re.stddev, ss$gauss.corr, ss$gauss.stddev)
 
-mixoglmm:::check(all.equal(params[, 1], c(0.132776922373239, -0.978883313177678, 0.00588956504176138, 0.931093835352336, -0.951880150828531, 0.475184594290818, 1, 0.458739249081703, 0.898470356696568, 0.509578939505349, 0.457699468536408, 0.475371743673464, 0.957529445330185, 1.97816425214396),
+mixoglmm:::check(all.equal(params[, 1], c(0.132776922373239, -0.978883313177678,
+                                          0.00588956504176138, 0.931093835352336,
+                                          -0.951880150828531, 0.475184594290818,
+                                           0.458739249081703, 0.898470356696568,
+                                          0.509578939505349, 0.457699468536408,
+                                          0.475371743673464, 0.957529445330185, 1.97816425214396),
                            tol = tol, check.attributes = FALSE))
 mixoglmm:::check(all.equal(params[,2], c(0.0728041125683895, 0.0734415916983707,
                                          0.082949354490307, 0.113231074990345,
                                          0.0287753918023289, 0.0265732094834572,
-                                         0, 0.0212513284541692, 0.0165462254834365,
+                                         .0212513284541692, 0.0165462254834365,
                                          0.0473091938811224, 0.0405375893928955, 0.048835468905032, 0.0440211302802085, 0.0661609545313001),
                            tol = tol, check.attributes = FALSE))
 
 tau <- ss$re.stddev
-mixoglmm:::check(all.equal(tau[, 1], c(0.458739249081702715749),
+mixoglmm:::check(all.equal(tau[, 1], c(0.4587338756886303881011),
                            tol = tol, check.attributes = FALSE))
-mixoglmm:::check(all.equal(tau[, 2], c(0.02125132845416918825343 ),
+mixoglmm:::check(all.equal(tau[, 2], c(0.02124770917560831612336 ),
                            tol = tol, check.attributes = FALSE))
 
 gamma <- ss$gauss.corr
