@@ -23,7 +23,8 @@ extract_ranef <- function(object, method = c("conditional means", "conditional m
 
   idnn.col <- which(fams != "gaussian")
   idnn.row <- as.vector(sapply(which(fams != "gaussian"), function(i) (i-1) * object$dims$N + seq_len(object$dims$N)))
-  tmp <- transform_parameters2(par, object$dims, y2, x_constr, object$constraints.lambda[[1]],
+  tmp <- transform_parameters2(par, object$dims, y2, x_constr,
+                               object$constraints.lambda,
                                object$offset,
                                object$cor_structure, idnn.row, idnn.col)
   gq <- statmod::gauss.quad(control$nGHQ, kind = "hermite")

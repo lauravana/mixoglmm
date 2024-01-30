@@ -4,6 +4,7 @@ mixoglmm_fit <- function(y, x, cor_structure,
                          offset, families,  control) {
   fams <- sapply(families, "[[", "family")
   idnn.col <- which(fams != "gaussian")
+  idn.col  <- which(fams == "gaussian")
   N <- NROW(y)
   y1   <- y[,  idnn.col, drop = FALSE]
   y2   <- as.matrix(y[, -idnn.col, drop = FALSE])
@@ -18,14 +19,24 @@ mixoglmm_fit <- function(y, x, cor_structure,
   ## correlation structure for gaussian responses
   obj$cor_structure <- init_fun(cor_structure, y = y2)
 
+  ## Constraints lambda
+  if (!is.null(constraints.lambda) & is.list(constraints.lambda)) {
+    if (length(constraints.lambda) > 1) stop("Constraints.lambda must be a list of length one.")
+    constraints.lambda <- constraints.lambda[[1]]
+  }
+  if (is.null(constraints.lambda)) {
+    constraints.lambda <- diag(NCOL(y))
+    constraints.lambda[idn.col[1], 1] <- 1
+    constraints.lambda <- constraints.lambda[, - idn.col[1], drop = FALSE]
+  }
+
   obj$dims <- list(N = N, K = K, K1 = K1, K2 = K2,
                    Pstar =  NCOL(x_constr),
                    G = attr(obj$cor_structure, "npar"),
-                   nlambda = NCOL(constraints.lambda[[1]]) - 1L)
+                   nlambda = NCOL(constraints.lambda) - 1L)
 
   idnn.row <- as.vector(sapply(idnn.col, function(i) (i-1) * N + seq_len(N)))
-  #  x1_constr <- x_constr[ id1, ]
-  #  x2_constr <- x_constr[-id1, ]
+
   x2_constr <- x_constr[-idnn.row, ]
   family_nn <- families[idnn.col]
 
@@ -42,7 +53,9 @@ mixoglmm_fit <- function(y, x, cor_structure,
                     double(1), # kappa
                     attr(obj$cor_structure , "start"), # rho
                     double(K2),#log(apply(y2, 2, sd, na.rm = TRUE)),
-                    double(NCOL(constraints.lambda[[1]]) - 1L) + 1L)
+                    #double(NCOL(constraints.lambda) - 1L) + 1L),
+                    seq_len(obj$dims$nlambda)
+                    )
 
 
   Z <- rep.int(1, N)
@@ -104,13 +117,15 @@ mixoglmm_fit <- function(y, x, cor_structure,
   gamma  <- tpar[obj$dims$Pstar + 1 + seq_len(obj$dims$G)]
   gamma  <- transf_cor(obj$cor_structure, gamma)
   omega  <- exp(tpar[obj$dims$Pstar + 1 + obj$dims$G + seq_len(obj$dims$K2)])
-  lambda <- c(1, tpar[obj$dims$Pstar + 1 + obj$dims$G + obj$dims$K2 + seq_len(obj$dims$nlambda)])
 
+  lambdas <- tpar[obj$dims$Pstar + 1 + obj$dims$G + obj$dims$K2 + seq_len(obj$dims$nlambda)]
+  lambda  <- drop(constraints.lambda %*% c(1, lambdas))
   names.beta   <- make_coef_names(x_names = colnames(x),
                                   y_names = colnames(y),
                                   constraints = constraints.beta)
-  names.lambda <- make_coef_names(y_names = colnames(y),
-                                  constraints = constraints.lambda)
+  names.lambda <- paste0("lambda", colnames(y))#make_lambda_names(y_names = colnames(y),
+                  #                      constraints = constraints.lambda)
+
   names.tau <- "tau"
   names.gamma <- attr(obj$cor_structure, "par_names")
   names.omega <- colnames(y)[-idnn.col]
@@ -133,6 +148,7 @@ mixoglmm_fit <- function(y, x, cor_structure,
                        )
   ###########################
   obj$Ntrials <- Ntrials
+  obj$constraints.lambda <- constraints.lambda
   obj
 }
 
@@ -145,9 +161,8 @@ negloglik <- function(par, y1, y2,  x_constr, #x2_constr,
                    dims, gq) {
   ## assign parameters
 
-  tmp <- transform_parameters2(par, dims, y2, x_constr, constraints.lambda[[1]], offset,
+  tmp <- transform_parameters2(par, dims, y2, x_constr, constraints.lambda, offset,
                                cor_structure, idnn.row, idnn.col, ind_y2)
-  print(tmp$kappa2)
   unodes <- tcrossprod(Z, sqrt(2 * tmp$kappa2) * gq$nodes) + tmp$nu
   nll1 <- - sum(sapply(seq_len(dims$K1),  function(k) {
     #ynodes <- tcrossprod(Z, sqrt(2 * kappa2) * gq$nodes) + xbeta1[, i] + lambda1[i] * nu

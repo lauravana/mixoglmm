@@ -155,11 +155,7 @@ mixoglmm <- function(formula, data,
     check_constraints(constraints.beta, x, Y)
     constraints.beta <- constraints.beta[colnames(x)]
   }
-  if (is.null(constraints.lambda)) {
-    constraints.lambda <- list(diag(NCOL(Y)))
-  } else {
-    if (length(constraints.lambda) > 1) stop("Constraints.lambda must be a list of length one.")
-  }
+
   ## Fit model
   fit <- mixoglmm_fit(y = Y, x = x,
                     cor_structure = cor_struct_gauss,
@@ -173,7 +169,6 @@ mixoglmm <- function(formula, data,
   fit$responses <- Y
   fit$x <- x
   fit$constraints.beta <- constraints.beta
-  fit$constraints.lambda <- constraints.lambda
   fit$weights <- weights
   fit$offset <- offset
   fit$formula <- formula
@@ -256,16 +251,18 @@ summary.mixoglmm <- function(object, call = FALSE, ...)
   Pstar <- object$dims$Pstar
   nlambda <- object$dims$nlambda
   G <- object$dims$G
+  K1 <- object$dims$K1
   K2 <- object$dims$K2
   ###########################
   cf <- object$parameters
   se <- sqrt(diag(object$vcov))
-  se <- c(se[seq_len(Pstar + 1 + G + K2)], 0,
+  se <- c(se[seq_len(Pstar + 1 + G + K2)], rep(0, - object$dims$nlambda + K1 + K2),
           se[- seq_len(Pstar + 1 + G + K2)])
   cf <- cbind(cf, se, cf/se, 2 * pnorm(-abs(cf/se)))
   cf[cf[, 2] == 0, 3] <- NA
   cf[cf[, 2] == 0, 4] <- NA
   colnames(cf) <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
+
 
   summary.output <- list()
   summary.output$formula <- object$formula
@@ -288,7 +285,7 @@ summary.mixoglmm <- function(object, call = FALSE, ...)
   #---------------------------------------
   cat("\nRandom effects:\n")
   cat("\tCoefficients:\n")
-  cflambda <- cf[Pstar + 1 + G + K2 + seq_len(nlambda + 1), , drop = FALSE]
+  cflambda <- cf[Pstar + 1 + G + K2 + seq_len(nlambda), , drop = FALSE]
   summary.output$re.coefficients <- printCoefmat(cflambda, signif.legend = FALSE)
   cat("\tStandard deviation:\n")
   summary.output$re.stddev <- printCoefmat(cf[Pstar +  1, , drop = FALSE],
