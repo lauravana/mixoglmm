@@ -334,7 +334,7 @@ mixoglmm:::check(all.equal(p_mean[1:5], c(-0.394862632372445, -0.364158330243734
 # gof(fit.grain)
 # gof(fit.seed)
 
-######### Missing values ########
+###### Missing values NAs #########
 
 set.seed(12345)
 data_toy_NA <- data_toy
@@ -383,7 +383,9 @@ mixoglmm:::check(all.equal(p_mode_NA[1:5], c(-0.383646713249743, -0.055174630896
 mixoglmm:::check(all.equal(p_mean_NA[1:5], c(-0.389663714341792, -0.049042132970619, -1.59624494499529, -1.66395870860669, -0.307139801512674),
                            tol = tol, check.attributes = FALSE))
 
+
 ######### Missing values for all normal responses ########
+
 set.seed(12345)
 data_toy_NA <- data_toy
 data_toy_NA[sample(1:nrow(data_toy_NA), 50), "y1"] <- NA
@@ -432,3 +434,4 @@ mixoglmm:::check(all.equal(p_mode_NA[1:5], c(-0.0573582928052127, 0.036562966061
 
 mixoglmm:::check(all.equal(p_mean_NA[1:5], c(-0.0636471758921174, 0.0426048325714321, -1.59403516681913, -1.66139948875571, -0.307229905919011),
                            tol = tol, check.attributes = FALSE))
+
