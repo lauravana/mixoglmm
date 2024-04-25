@@ -87,16 +87,16 @@ update_families <- function(families) {
 transform_parameters2 <- function(tpar, dims, y2, x_constr, constraints.lambda,
                                   offset, cor_structure,
                                   idnn.row, idnn.col, ind.y2) {
-  # print(tpar)
   beta   <-     tpar[seq_len(dims$Pstar)]
-  tau2   <- exp(tpar[dims$Pstar + 1])
-  gamma  <-     tpar[dims$Pstar + 1 + seq_len(dims$G)]
-  omega  <- exp(tpar[dims$Pstar + 1 + dims$G + seq_len(dims$K2)])
-  lambda <- tpar[dims$Pstar + 1 + dims$G + dims$K2 + seq_len(dims$nlambda)]
-  lambda <- drop(constraints.lambda %*% c(1, lambda))
-  lambda1 <- lambda[ idnn.col] # rep.int(1, dims$K1)
-  lambda2 <- lambda[-idnn.col] # rep.int(1, dims$K2)
-
+  # tau2   <- exp(tpar[dims$Pstar + 1])
+  tau2 <- 1
+  gamma  <-     tpar[dims$Pstar  + seq_len(dims$G)]
+  omega  <- exp(tpar[dims$Pstar  + dims$G + seq_len(dims$K2)])
+  lambda <- tpar[dims$Pstar + dims$G + dims$K2 + seq_len(dims$nlambda)]
+  lambda <- drop(constraints.lambda %*% lambda)
+  lambda1 <- lambda[ idnn.col] 
+  lambda2 <- lambda[-idnn.col]
+  
   R <- build_cor(cor_structure, gamma)
   Omega <- tcrossprod(omega) * R
   Sigma <- Omega + tau2 * tcrossprod(lambda2)
@@ -128,7 +128,7 @@ transform_parameters2 <- function(tpar, dims, y2, x_constr, constraints.lambda,
 
 make_lambda_names <- function(
     y_names = colnames(y),
-    constraints = constraints.lambda) {
+    constraints.lambda) {
 
   paste("lambda", sapply(1:NCOL(constraints.lambda), function(i)
     paste0(y_names[as.logical(constraints.lambda[,i])], collapse = ".")))
