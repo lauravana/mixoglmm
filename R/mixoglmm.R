@@ -207,29 +207,29 @@ print.mixoglmm <- function(x, call = FALSE, ...) {
   ## ------------------------------
   cat("\nRandom effects:\n")
   cat("Random effects coefficients:\n")
-  lambda <- pars[-seq_len(x$dims$Pstar + 1 + x$dims$G + x$dims$K2)]
+  lambda <- pars[-seq_len(x$dims$Pstar + x$dims$G + x$dims$K2)]
   print(lambda, ...)
   ## ------------------------------
-  cat("Random effects standard deviation:\n")
-  tau <-  pars[x$dims$Pstar + 1]
-  mat <- as.data.frame(cbind(tau))
-  x$gf <- "Subject"
-  mat[,"Grouping factor"] <-  x$gf
-  mat <- mat[,c(2,1)]
-  colnames(mat)[2] <- "Std.dev"
-  print(mat, row.names = FALSE, ...)
-  cat("Number of groups: ",  x$dims$N, "\n")
+  cat("Random effects standard deviation is fixed to one. \n")
+  # tau <-  pars[x$dims$Pstar + 1]
+  # mat <- as.data.frame(cbind(tau))
+  # x$gf <- "Subject"
+  # mat[,"Grouping factor"] <-  x$gf
+  # mat <- mat[,c(2,1)]
+  # colnames(mat)[2] <- "Std.dev"
+  # print(mat, row.names = FALSE, ...)
+  # cat("Number of groups: ",  x$dims$N, "\n")
   ## ------------------------------
   cat("\nCorrelation of the Gaussian response variables, conditional on the random effects:\n")
   if (x$dims$G == 0) {
     cat("No correlation parameters.\n")
   } else {
-    gamma <- pars[x$dims$Pstar + 1 + seq_len(x$dims$G)]
+    gamma <- pars[x$dims$Pstar + seq_len(x$dims$G)]
     print(gamma, ...)
   }
   ## ------------------------------
   cat("\nStandard deviation of the Gaussian response variables, conditional on the random effects:\n")
-  omega <- pars[x$dims$Pstar + 1 + x$dims$G + seq_len(x$dims$K2)]
+  omega <- pars[x$dims$Pstar + x$dims$G + seq_len(x$dims$K2)]
   #fams <- sapply(x$families, "[[", "family")
   #idnn.col <- which(fams != "gaussian")
   #names(omega2) <- colnames(x$responses)[-idnn.col]
@@ -256,8 +256,8 @@ summary.mixoglmm <- function(object, call = FALSE, ...)
   ###########################
   cf <- object$parameters
   se <- sqrt(diag(object$vcov))
-  se <- c(se[seq_len(Pstar + 1 + G + K2)], rep(0, - object$dims$nlambda + K1 + K2),
-          se[- seq_len(Pstar + 1 + G + K2)])
+  # se <- c(se[seq_len(Pstar + G + K2)], rep(0, - object$dims$nlambda + K1 + K2),
+  #         se[- seq_len(Pstar + 1 + G + K2)])
   cf <- cbind(cf, se, cf/se, 2 * pnorm(-abs(cf/se)))
   cf[cf[, 2] == 0, 3] <- NA
   cf[cf[, 2] == 0, 4] <- NA
@@ -285,22 +285,22 @@ summary.mixoglmm <- function(object, call = FALSE, ...)
   #---------------------------------------
   cat("\nRandom effects:\n")
   cat("\tCoefficients:\n")
-  cflambda <- cf[Pstar + 1 + G + K2 + seq_len(nlambda), , drop = FALSE]
+  cflambda <- cf[Pstar + G + K2 + seq_len(nlambda), , drop = FALSE]
   summary.output$re.coefficients <- printCoefmat(cflambda, signif.legend = FALSE)
-  cat("\tStandard deviation:\n")
-  summary.output$re.stddev <- printCoefmat(cf[Pstar +  1, , drop = FALSE],
-                                           signif.legend = FALSE)
+  cat("\tStandard deviation fixed to one.\n")
+  # summary.output$re.stddev <- printCoefmat(cf[Pstar +  1, , drop = FALSE],
+  #                                          signif.legend = FALSE)
   ## ------------------------------
   cat("\nCorrelation of the Gaussian response variables:\n")
   if (G == 0) {
     cat("No correlation parameters.\n")
   } else {
-    summary.output$gauss.corr <- printCoefmat(cf[Pstar + 1 + seq_len(G), , drop = FALSE],
+    summary.output$gauss.corr <- printCoefmat(cf[Pstar + seq_len(G), , drop = FALSE],
                                              signif.legend = FALSE)
   }
   ## ------------------------------
   cat("\nStandard deviation of the Gaussian response variables:\n")
-  summary.output$gauss.stddev <- printCoefmat(cf[Pstar + 1 + G + seq_len(K2), , drop = FALSE],
+  summary.output$gauss.stddev <- printCoefmat(cf[Pstar + G + seq_len(K2), , drop = FALSE],
                                            signif.legend = FALSE)
   class(summary.output) <- "summary.mixoglmm"
   return(invisible(summary.output))

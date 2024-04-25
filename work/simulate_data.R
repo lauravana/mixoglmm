@@ -9,7 +9,7 @@ X <- cbind(Int=1, X1 = rnorm(N), X2 = rnorm(N))
 ## Coefficients for the binary variable
 alpha <- c(0.2, -1, 0.5)
 ## Variance of the random effects
-tau2 <- 0.2
+tau2 <- 1
 ##################################
 ## Simulation of random effects ##
 ##################################
@@ -28,6 +28,7 @@ pfun <- switch(link,
                "cauchit" = pcauchy)
 
 Be1 <- rbinom(N, 1, pfun(eta_Be))
+Be2 <- rbinom(N, 1, pfun(eta_Be))
 ##########################################
 ## Simulation of Poison random variable ##
 ##########################################
@@ -53,7 +54,7 @@ y2 <- m + e
 
 data_toy <- cbind.data.frame(y1 = y2[, 1], y2 = y2[, 2], y3 = y2[, 3],
                              Po1 = Po1,
-                             Be1 = Be1,
+                             Be1 = Be1, Be2 = Be2, 
                              X1  = X[, 2],
                              X2  = X[, 3],
                              X3 = factor(sample(c("A", "B", "C"), N, replace = TRUE)))

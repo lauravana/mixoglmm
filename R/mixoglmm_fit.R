@@ -26,14 +26,33 @@ mixoglmm_fit <- function(y, x, cor_structure,
   }
   if (is.null(constraints.lambda)) {
     constraints.lambda <- diag(NCOL(y))
-    constraints.lambda[idn.col[1], 1] <- 1
-    constraints.lambda <- constraints.lambda[, - idn.col[1], drop = FALSE]
+  }
+  ###### Identifiability check: ###### 
+  n_error_param_allowed <- (K * (K + 1)/2 - 1)
+  n_error_param_to_estimate <-
+    ## correlation params in Omega
+    attr(obj$cor_structure, "npar") +
+    ## Lambda
+    NCOL(constraints.lambda) +
+    ## Tau2
+    0 +
+    ## sigmas
+    K2
+  cat("Identifiability check: \n")
+  if (n_error_param_allowed < n_error_param_to_estimate) {
+    stop(sprintf("Number of allowed parameters is %i, number of parameters in the model is %i. \n Consider imposing further constraints on lambda or choosing a more parsimonious correlation structure for the Gaussian responses (if more than one are available). \n",
+                 n_error_param_allowed, n_error_param_to_estimate))
+  } else {
+    cat(sprintf("Number of allowed parameters is %i, number of parameters in the model is %i. OK. \n",
+                 n_error_param_allowed, n_error_param_to_estimate))
   }
 
+
+  ###### Setup dimensions: ###### 
   obj$dims <- list(N = N, K = K, K1 = K1, K2 = K2,
                    Pstar =  NCOL(x_constr),
                    G = attr(obj$cor_structure, "npar"),
-                   nlambda = NCOL(constraints.lambda) - 1L)
+                   nlambda = NCOL(constraints.lambda))
 
   idnn.row <- as.vector(sapply(idnn.col, function(i) (i-1) * N + seq_len(N)))
 
@@ -50,14 +69,14 @@ mixoglmm_fit <- function(y, x, cor_structure,
   ty[, fams == "poisson"] <- (ty[, fams == "poisson"])^(1/3)
   start_beta <- glm(c(ty) ~ 0 + x_constr)$coefficients
   if (is.null(control$start_values)) {
-    start_values <- c(double(obj$dims$Pstar), #start_beta,#
-                      double(1), # tau
+    start_values <- c(double(obj$dims$Pstar), #start_beta,
+                      # double(1), # tau
                       attr(obj$cor_structure , "start"), # rho
-                      double(K2),#log(apply(y2, 2, sd, na.rm = TRUE)),
+                      double(K2),
                       double(obj$dims$nlambda) + 1L)
   } else {
     if (length(control$start_values) !=
-        (obj$dims$Pstar + 1 + obj$dims$G + K2 + obj$dims$nlambda)) stop("Starting values in control are not of correct length: Specify starting values for beta, log(tau), correlation structure, diagonal of Omega and lambdas")
+        (obj$dims$Pstar + obj$dims$G + K2 + obj$dims$nlambda)) stop("Starting values in control are not of correct length: Specify starting values for beta, log(tau), correlation structure, diagonal of Omega and lambdas")
     start_values <- control$start_values
   }
 
@@ -78,26 +97,20 @@ mixoglmm_fit <- function(y, x, cor_structure,
   gq <- statmod::gauss.quad(control$nGHQ, kind = "hermite")
 
   ## Optimize negative log likelihood
-  obj$res <- suppressWarnings(optimx(start_values, function(par) negloglik(par,
-                                                                         y1, y2, x_constr, #x2_constr,
-                                                                         Z, ind_y2,
-                                                                         constraints.lambda,
-                                                                         obj$cor_structure,
-                                                                         w, Ntrials, offset,idnn.row, idnn.col,
-                                                                         family_nn,#family_nn_ll,
-                                                                         obj$dims, gq),
-                                        method = control$solver,
-                                        hessian = FALSE,
-                                        control =  control$solver.optimx.control))
-  # obj$res <- nlminb(start_values, function(par) negloglik(par,
-  #                                                      y1, y2, x_constr, #x2_constr,
-  #                                                      Z, ind_y2,
-  #                                                      constraints.lambda,
-  #                                                      obj$cor_structure,
-  #                                                      w, Ntrials, offset,idnn.row, idnn.col,
-  #                                                      family_nn,#family_nn_ll,
-  #                                                      obj$dims, gq),
-  #                   control = control$solver.nlminb.control)
+  obj$res <- suppressWarnings(
+    optimx(start_values, 
+           function(par) 
+             negloglik(par,
+                       y1, y2, x_constr, #x2_constr,
+                       Z, ind_y2,
+                       constraints.lambda,
+                       obj$cor_structure,
+                       w, Ntrials, offset,idnn.row, idnn.col,
+                       family_nn,#family_nn_ll,
+                       obj$dims, gq),
+           method = control$solver,
+           hessian = FALSE,
+           control =  control$solver.optimx.control))
   obj$par <- unlist(obj$res[1:length(start_values)])
   obj$objective <- unlist(obj$res["value"])
   if (obj$res$convcode != 0){
@@ -105,42 +118,48 @@ mixoglmm_fit <- function(y, x, cor_structure,
     warning("NO/FALSE CONVERGENCE - choose a different optimizer, increase iterations or use different starting values.")
   }
   ## Compute Hessian numerically
-  tparHess <- numDeriv::hessian(function(par) negloglik(par,
-                                                 y1, y2, x_constr,
-                                                 Z,ind_y2,
-                                                 constraints.lambda,
-                                                 obj$cor_structure,
-                                                 w, Ntrials, offset,idnn.row, idnn.col,
-                                                 family_nn,
-                                                 obj$dims, gq), obj$par)
-
+  tparHess <- numDeriv::hessian(
+    function(par) negloglik(par,
+                            y1, y2, x_constr,
+                            Z,ind_y2,
+                            constraints.lambda,
+                            obj$cor_structure,
+                            w, Ntrials, offset,idnn.row, idnn.col,
+                            family_nn,
+                            obj$dims, gq), obj$par)
+  
   ##---------------------
   tpar   <- obj$par
   beta   <- tpar[seq_len(obj$dims$Pstar)]
-  ttau2 <-  tpar[obj$dims$Pstar + 1]
-  tau    <- exp(ttau2/2)
-  gamma  <- tpar[obj$dims$Pstar + 1 + seq_len(obj$dims$G)]
+  # ttau2 <-  tpar[obj$dims$Pstar + 1]
+  # tau    <- exp(ttau2/2)
+  gamma  <- tpar[obj$dims$Pstar + seq_len(obj$dims$G)]
   gamma  <- transf_cor(obj$cor_structure, gamma)
-  omega  <- exp(tpar[obj$dims$Pstar + 1 + obj$dims$G + seq_len(obj$dims$K2)])
+  omega  <- exp(tpar[obj$dims$Pstar + obj$dims$G + seq_len(obj$dims$K2)])
 
-  lambdas <- tpar[obj$dims$Pstar + 1 + obj$dims$G + obj$dims$K2 + seq_len(obj$dims$nlambda)]
-  lambda  <- drop(constraints.lambda %*% c(1, lambdas))
+  lambda <- tpar[obj$dims$Pstar + obj$dims$G + obj$dims$K2 + seq_len(obj$dims$nlambda)]
+  # lambda  <- drop(constraints.lambda %*% c(lambdas))
   names.beta   <- make_coef_names(x_names = colnames(x),
                                   y_names = colnames(y),
                                   constraints = constraints.beta)
-  names.lambda <- paste0("lambda", colnames(y))#make_lambda_names(y_names = colnames(y),
-                  #                      constraints = constraints.lambda)
+  names.lambda   <- make_lambda_names(y_names = colnames(y),
+                                      constraints.lambda)
+                                
+#  names.lambda <- paste0("lambda", colnames(y))
 
-  names.tau <- "tau"
+  # names.tau <- "tau"
   names.gamma <- attr(obj$cor_structure, "par_names")
   names.omega <- colnames(y)[-idnn.col]
 
-  obj$parameters <- c(beta, tau, gamma, omega, lambda)
-  names(obj$parameters) <- c(names.beta, names.tau, names.gamma, names.omega, names.lambda)
+  obj$parameters <- c(beta, # tau, 
+                      gamma, omega, 
+                      lambda)
+  names(obj$parameters) <- c(names.beta,# names.tau,
+                             names.gamma, names.omega, names.lambda)
   # --------------------
   if (TRUE) {
   J <- as.matrix(Matrix::bdiag(list(diag(obj$dim$Pstar), ## d tbeta/d beta
-                              dttau2.tau(tau), ## d ttau2/d tau
+                              # dttau2.tau(tau), ## d ttau2/d tau
                               dtcor.cor(obj$cor_structure, gamma),
                               dtomega.omega(omega),# diag(dtomega.omega(omega))),## d tomega/d omega
                               diag(obj$dims$nlambda) # d tlambda/d lambda

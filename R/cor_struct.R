@@ -114,7 +114,7 @@ init_fun.cor_equi <-
     attr(eobj, "ynames") <- colnames(y)
     attr(eobj, "ndim") <- NCOL(y)
     attr(eobj, "npar") <- 1
-    attr(eobj, "start") <- double(1)
+    attr(eobj, "start") <- 1 # double(1)
     attr(eobj, "par_names") <- "corr"
     eobj
   }
