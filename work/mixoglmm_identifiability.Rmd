@@ -1,0 +1,120 @@
+---
+title: "mixoglmm variance parametrization"
+date: "2024-04-23"
+output: pdf_document
+---
+
+The model is at the moment formulated as a one-factor model with loadings $\boldsymbol\lambda$. We can denote $\tilde u_{ik}=\lambda_k u_i$ for $k=1,\ldots,K$ 
+where $u_i\sim N(0, \tau^2)$. 
+One issue with this formulation is the fact that 
+$\lambda_k$ and the variance of $u_i$ are not identifiable. We could blow up 
+$u_i$ and make $\lambda_k$ smaller or the other way around. So a solution would be to either fix $\tau^2=1$ or fix e.g., the first $\lambda$ to one.
+
+Maybe the best would be to fix $\tau^2=1$. 
+
+# Case with one binary response
+
+Assume we have $K$ responses, $K_1=1$ binary and $K_2=K-1$ Gaussian.
+The variance of $\tilde {\boldsymbol u}_{i}=\boldsymbol\lambda u_i$ is given by:
+$$
+\Sigma_u=\boldsymbol\lambda \boldsymbol\lambda^\top
+$$
+The conditional (on the random effects) variance of the errors is
+$$
+\Sigma=\begin{pmatrix}
+v & 0 \\
+0 & \Omega
+\end{pmatrix}
+$$
+where $v$ is not identified and is typically set to 1.
+
+So the unconditional variance of the errors is
+$$
+\Sigma_e=\Sigma_u+\Sigma=\begin{pmatrix}
+\tau^2 \lambda_1\lambda_1 + v & \tau^2 \lambda_1\lambda_2 & \ldots & \tau^2 \lambda_1\lambda_K \\
+\tau^2 \lambda_1\lambda_2 & \tau^2 \lambda_2\lambda_2 + \sigma_1^2 & \\
+\vdots &\vdots & \ddots \\
+\tau^2 \lambda_1\lambda_K& \tau^2 \lambda_2\lambda_K + \sigma_1\sigma_{K-1}\rho_{1,K-1} &\ldots & \tau^2 \lambda_K\lambda_K + \sigma^2_{K-1}\\
+\end{pmatrix}
+$$
+Only this matrix is identifiable. 
+In this case we can estimate $K(K+1)/2 - 1=K^2/2 + K/2 - 1$ parameters, as 
+$v$ is not identifiable. 
+
+In our model we have:
+
+* $K-1$ $\sigma$'s, 
+* $(K-1)*(K-2)/2$ $\rho$'s, 
+* no $\tau^2$ as we fixed it to one, 
+* $K$ $\lambda$'s 
+
+Total is $K-1+(K^2/2-3K/2+1)+K=K^2/2 + K/2$ so we have **one** parameter too much. So we need to fix one $\lambda_1=1$ or we can restrict the correlation structure to e.g., equi correlation.
+
+# Case with more binary responses
+
+Assume we have $K_1$ binary responses and $K_2$ Gaussians where $K_1+K_2=K$.
+
+The conditional (on the random effects) variance of the errors is
+$$
+\Sigma=\begin{pmatrix}
+v_1 & 0&0& 0 \\
+0 & \ddots &0& 0 \\
+0 & 0 &v_{K_1}& 0 \\
+0 & 0& 0&  \Omega
+\end{pmatrix}
+$$
+where $v_1,\ldots,v_{K_1}$ are not jointly identifiable. We can fix one of them to one 
+and estimate the rest relative to this one (see eg heteroskedastic probit models )
+
+So the unconditional variance of the errors is
+$$
+\Sigma_e=\Sigma_u+\Sigma=\begin{pmatrix}
+\tau^2 \lambda_1\lambda_1 + v_1 & \tau^2 \lambda_1\lambda_2 & \ldots & \tau^2 \lambda_1\lambda_{K_1}&\ldots&\tau^2\lambda_1\lambda_{K} \\
+\vdots& \ldots & \ldots & \vdots\\
+\tau^2 \lambda_1\lambda_{K_1} & \tau^2 \lambda_2\lambda_{K_1}&\ldots &  \tau^2 \lambda_{K_1} \lambda_{K_1}+v_{K_1} & \\
+\vdots &\vdots & \ddots \\
+\tau^2 \lambda_1\lambda_K& &&&\tau^2 \lambda_{K_1+1}\lambda_K + \sigma_1\sigma_{K_2}\rho_{1,K_2} &\ldots & \tau^2 \lambda_K\lambda_K + \sigma^2_{K_2}\\
+\end{pmatrix}
+$$
+Only this matrix is identifiable. 
+In this case we can estimate $K(K+1)/2 - 1=K^2/2 + K/2 - 1$ parameters, as 
+we need to fix one $v_k$. 
+
+In our model we have:
+
+* $K_2$ $\sigma$'s, 
+* $(K_2)*(K_2-1)/2$ $\rho$'s, 
+* one $\tau^2$, 
+* $K$ $\lambda$'s 
+* $K_1-1$ $v$'s
+
+Total is $K_2+(K_2^2/2-K_2/2)+1+K + K_1-1$.
+What we need is:
+\begin{align}
+K^2/2 + K/2 - 1 \geq K_2+(K_2^2/2-K_2/2)+1+K + K_1-1\\
+K^2/2 + K/2 - 1 \geq (K_2^2/2-K_2/2)+ 2K\\
+K^2/2 + K/2 - 2K - 1 \geq (K_2^2/2- K_2/2)\\
+K^2/2 - 3K/2 - 1 \geq (K_2^2/2- K_2/2)\\
+K^2/2 - K_2^2/2 \geq 3K/2 - K_2/2 + 1 \\
+K^2 - K_2^2 \geq 3K - K_2 + 2 \\
+\frac{K^2 - K_2^2}{3K - K_2 + 2}\geq 1 \\
+\end{align}
+```{r}
+K1 <- 1:4
+K2 <- 3
+K <- K1 + K2
+(K^2 - K2^2)/(3*K-K2+2)
+```
+Already for $K_1=2$ the model should be identifiable.
+
+Increasing $K_1$ from $1$ to $2$, $K^{old}=1+K_2$  and $K^{new}=2+K_2$ , 
+the additional binary variable expands the matrix 
+$\Sigma_e$ by allowing the estimation of extra $K^{new}$ parameters. But adding a binary variable adds only two extra parameters $\lambda$ and $v$ 
+to the model (given that the binaries are uncorrelated).
+
+Increasing $K_2$ from $1$ to $2$, $K^{old}=1+K_1$  and $K^{new}=2+K_1$ , 
+the additional continuous variable expands the matrix 
+$\Sigma_e$ by allowing the estimation of extra $K^{new}$ parameters. 
+But adding a continuous variable adds $K^{new}+1$ extra parameters:
+$\lambda_k$, $\sigma_k$ and $K^{new}-1$ correlation parameters.
+to the model (given that the binaries are uncorrelated).

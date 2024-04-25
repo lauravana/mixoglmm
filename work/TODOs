@@ -1,0 +1,7 @@
+TODOs:
+
+* Allow for hereskedasticity in the errors of the non-normal observations:
+  * For binary, allow the variance of the errors $K1 - 1$ responses to be different than 1.
+  * Figure out how to do this for poisson.
+
+* Extensions: higher dimensional factor model.
