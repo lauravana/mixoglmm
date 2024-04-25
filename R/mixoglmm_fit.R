@@ -29,11 +29,25 @@ mixoglmm_fit <- function(y, x, cor_structure,
     constraints.lambda[idn.col[1], 1] <- 1
     constraints.lambda <- constraints.lambda[, - idn.col[1], drop = FALSE]
   }
-
+  ## Identifiability check:
+  n_error_param_allowed <- (K * (K + 1)/2 - 1)
+  n_error_param_to_estimate <-
+    ## correlation params in Omega
+    attr(obj$cor_structure, "npar") +
+    ## Lambda
+    NCOL(constraints.lambda) +
+    ## Tau2
+    0 +
+    ## sigmas
+    K2
+  if (n_error_param_allowed < n_error_param_to_estimate)
+    stop(sprintf("No of allowed parameters is %i, to estimate we have %i. Consider imposing further constraints on lambda or choosing a more parsimonious correlation structure.",
+                n_error_param_allowed, n_error_param_to_estimate))
+  
   obj$dims <- list(N = N, K = K, K1 = K1, K2 = K2,
                    Pstar =  NCOL(x_constr),
                    G = attr(obj$cor_structure, "npar"),
-                   nlambda = NCOL(constraints.lambda) - 1L)
+                   nlambda = NCOL(constraints.lambda))
 
   idnn.row <- as.vector(sapply(idnn.col, function(i) (i-1) * N + seq_len(N)))
 
