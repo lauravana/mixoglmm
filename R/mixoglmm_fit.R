@@ -38,7 +38,7 @@ mixoglmm_fit <- function(y, x, cor_structure,
     0 +
     ## sigmas
     K2
-  cat("Identifiability check: \n")
+  cat("Identifiability check for factor loadings and error structure parameters: \n")
   if (n_error_param_allowed < n_error_param_to_estimate) {
     stop(sprintf("Number of allowed parameters is %i, number of parameters in the model is %i. \n Consider imposing further constraints on lambda or choosing a more parsimonious correlation structure for the Gaussian responses (if more than one are available). \n",
                  n_error_param_allowed, n_error_param_to_estimate))
