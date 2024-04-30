@@ -12,6 +12,31 @@ $u_i$ and make $\lambda_k$ smaller or the other way around. So a solution would 
 
 Maybe the best would be to fix $\tau^2=1$. 
 
+Sufficient conditions about the identifiability of single-factor models can be found in 
+
+* Stanghellini, Elena. "Identification of a single-factor model using graphical Gaussian rules." Biometrika 84.1 (1997): 241-244. [see paper here](https://www.jstor.org/stable/2337571?seq=2).
+* Vicard, Paola. "Miscellanea. On the identification of a single-factor model with correlated residuals." Biometrika 87.1 (2000): 199-205. 
+
+More specifically, one should study the graph $\bar G=(K, \bar E)$ where $K$ is the set of nodes 
+(i.e., outcomes) and $\bar E$ is the set of pairs $(i, j)$ of distinct elements 
+of $K$ such that the entry $\theta_{i,j}$ of $\Sigma^{-1}$ is zero. Some terminology:
+
+* a path connecting two nodes $\beta_0$ and $\beta_m$ is a sequence of edges  $(\beta_l,\beta_{l+1}), l=0,...,m-1$,
+
+* an $m$-cycle is path with $\beta_0=\beta_m$.
+
+* a connectivity component is a maximal connected subgraph.
+
+The sufficient 
+condition in Stanghellini says that the model is identifiable if $q\geq 3$ and 
+
+* if graph $\bar G$ contains exactly one $m$-cycle $A\subseteq K$ with $m$ odd and 
+
+* if for each $\beta\in B=K\setminus A$ there exists an $\alpha$ such that $\beta$ is connected to $\alpha$.
+
+The necessary and sufficient condition in Vicard (2000) is that every connectivity 
+component of $\bar G$ contain at least one odd cycle (cycle with an odd number of vertices).
+
 # Case with one binary response
 
 Assume we have $K$ responses, $K_1=1$ binary and $K_2=K-1$ Gaussian.
@@ -48,7 +73,41 @@ In our model we have:
 * no $\tau^2$ as we fixed it to one, 
 * $K$ $\lambda$'s 
 
-Total is $K-1+(K^2/2-3K/2+1)+K=K^2/2 + K/2$ so we have **one** parameter too much. So we need to fix one $\lambda_1=1$ or we can restrict the correlation structure to e.g., equi correlation.
+Both the `cor_general` and the `cor_equi` correlation structures do not lead 
+to sparse entries in the precision matrix $\Sigma^{-1}$. The graph $\bar G$ 
+looks like the one below  (for 4 responses, `y1` binary, `y2`, `y3` and `y4` Gaussian) 
+and does not satisfy the conditions.
+```{r echo=FALSE, fig.width=2, fig.height=2}
+el <- matrix(c(
+  "y1", "y2",
+  "y1", "y3",
+  "y1", "y4"),
+  nc = 2,
+  byrow = TRUE
+)
+
+g  <- igraph::graph_from_edgelist(el, directed = FALSE)
+par(mar = c(0, 0, 0, 0)+.1)
+plot(g,
+     vertex.size = 30,
+     vertex.color = "white",
+     vertex.label.color = "black",
+     vertex.label.cex = 1,
+     edge.width = 1,
+     edge.color = "black"
+)
+
+```
+
+
+Some thoughts: 
+
+* Correlation structures such as the AR(1) would be appropriate, as they allow for conditional independence, but for the cocas application not very useful.
+
+* If we fix at least two of the $\lambda$s to be equal, then we would again have an identifiable model.
+
+<!-- Total is $K-1+(K^2/2-3K/2+1)+K=K^2/2 + K/2$ so we have **one** parameter too much. So we need to fix one $\lambda_1=1$ or we can restrict the correlation structure to e.
+g., equi correlation. -->
 
 # Case with more binary responses
 
@@ -63,8 +122,7 @@ v_1 & 0&0& 0 \\
 0 & 0& 0&  \Omega
 \end{pmatrix}
 $$
-where $v_1,\ldots,v_{K_1}$ are not jointly identifiable. For now we can assume we fix them 
-all to one (this can be later extended).
+where $v_1,\ldots,v_{K_1}$ are not jointly identifiable. For now we can assume we fix them  all to one (this can be later extended).
 
 So the unconditional variance of the errors is
 $$
@@ -90,16 +148,96 @@ In our model we have:
 * no $v$'s as we assume we fix them all to one.
 
 Total is $K_2+(K_2^2/2-K_2/2)+K$.
-What we need is:
-\begin{align}
-K^2/2 + K/2 - 1 \geq K_2+(K_2^2/2-K_2/2)+K\\
-K^2/2 - K/2 - 1 \geq (K_2^2/2 + K_2/2)\\
-K^2 - K - 2 \geq (K_2^2+ K_2)\\
-K^2 - K_2^2 \geq K + K_2 + 2 \\
-(K_1 + K_2)^2 - K_2^2 \geq K_1 + K_2 + K_2 + 2 \\
-K_1(2K_2 + K_1) \geq K_1 + 2K_2 + 2 \\
-\underbrace{(K_1-1)}_{\geq 0}\underbrace{(2K_2 + K_1)}_{\geq 3} \geq 2 \\
-\end{align}
 
-This holds whenever $K_1 > 1$, so already for $K_1=2$ the model should be identifiable.
+The graph $\bar G$ 
+looks like the one below (for 4 responses, `y1` and `y2` binary, 
+`y3` and `y4` Gaussian) and does satisfy the conditions.
 
+```{r echo=FALSE, fig.width=2, fig.height=2}
+el <- matrix(c(
+  "y1", "y2",
+  "y1", "y3",
+  "y1", "y4",
+  "y2", "y3",
+  "y2", "y4"),
+  nc = 2,
+  byrow = TRUE
+)
+
+g  <- igraph::graph_from_edgelist(el, directed = FALSE)
+par(mar = c(0, 0, 0, 0)+.1)
+plot(g,
+     vertex.size = 30,
+     vertex.color = "white",
+     vertex.label.color = "black",
+     vertex.label.cex = 1,
+     edge.width = 1,
+     edge.color = "black"
+)
+```
+
+<!-- What we need is: -->
+<!-- \begin{align} -->
+<!-- K^2/2 + K/2 - 1 \geq K_2+(K_2^2/2-K_2/2)+K\\ -->
+<!-- K^2/2 - K/2 - 1 \geq (K_2^2/2 + K_2/2)\\ -->
+<!-- K^2 - K - 2 \geq (K_2^2+ K_2)\\ -->
+<!-- K^2 - K_2^2 \geq K + K_2 + 2 \\ -->
+<!-- (K_1 + K_2)^2 - K_2^2 \geq K_1 + K_2 + K_2 + 2 \\ -->
+<!-- K_1(2K_2 + K_1) \geq K_1 + 2K_2 + 2 \\ -->
+<!-- \underbrace{(K_1-1)}_{\geq 0}\underbrace{(2K_2 + K_1)}_{\geq 3} \geq 2 \\ -->
+<!-- \end{align} -->
+
+<!-- This holds whenever $K_1 > 1$. -->
+Already for $K_1=2$ the model should be identifiable,
+even with a `cor_general` error structure.
+
+# Automatized check
+We could check the vertex connectivity for graph corresponding to $\Sigma$ for every implemented error structure. This would automatize the identifiability check.
+
+Consider an AR(1) correlation structure
+```{r}
+J <- 10 # number of dimensions
+m <- matrix(0, ncol=J, nrow=J)
+m[1,1] <- 1
+for (i in 2:J) {
+ for (j in 2:J) {
+   m[i,j] <- 0.9^abs(i-j)
+ } 
+}
+minv <- solve(m)
+g_bar_mat <- (abs(minv) < 10e-5) + 0
+g_bar_mat[upper.tri(g_bar_mat)] <- NA
+id_ones <- which(g_bar_mat == 1, arr.ind = TRUE)
+g <- igraph::graph_from_edgelist(id_ones, directed = FALSE)
+par(mar = c(0, 0, 0, 0)+.1)
+plot(g,
+     vertex.size = 30,
+     vertex.color = "white",
+     vertex.label.color = "black",
+     vertex.label.cex = 1,
+     edge.width = 1,
+     edge.color = "black"
+)
+## More efficient version from stackoverflow
+## https://stackoverflow.com/questions/55091438/r-igraph-find-all-cycles
+FindCycles <- function(g) {
+  Cycles <- NULL
+  for (v1 in igraph::V(g)) {
+    if(degree(g, v1, mode="in") == 0) { next }
+    GoodNeighbors <- igraph::neighbors(g, v1, mode="out")
+    GoodNeighbors = GoodNeighbors[GoodNeighbors > v1]
+    for(v2 in GoodNeighbors) {
+      TempCyc <- lapply(all_simple_paths(g, v2,v1, mode="out"), function(p) c(v1,p))
+      TempCyc <- TempCyc[which(sapply(TempCyc, length) > 3)]
+      TempCyc <- TempCyc[sapply(TempCyc, min) == sapply(TempCyc, `[`, 1)]
+      Cycles  <- c(Cycles, TempCyc)
+    }
+  }
+  Cycles
+}
+library(igraph)
+Cy <- FindCycles(g)
+lCy <- ifelse(length(Cy) == 0, 0, sapply(Cy, length))
+is_ident <- all(lCy > 2 & lCy %% 2 == 0)
+is_ident
+```

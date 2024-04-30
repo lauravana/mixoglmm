@@ -38,14 +38,35 @@ mixoglmm_fit <- function(y, x, cor_structure,
     0 +
     ## sigmas
     K2
-  cat("Identifiability check for factor loadings and error structure parameters: \n")
-  if (n_error_param_allowed < n_error_param_to_estimate) {
-    stop(sprintf("Number of allowed parameters is %i, number of parameters in the model is %i. \n Consider imposing further constraints on lambda or choosing a more parsimonious correlation structure for the Gaussian responses (if more than one are available). \n",
-                 n_error_param_allowed, n_error_param_to_estimate))
-  } else {
-    cat(sprintf("Number of allowed parameters is %i, number of parameters in the model is %i. OK. \n",
-                 n_error_param_allowed, n_error_param_to_estimate))
+  cat("\nIdentifiability check for factor loadings and error structure parameters... \n")
+  
+  if (NCOL(constraints.lambda) == NCOL(y)) {
+    if (K1 == 1) {
+      if (K2 == 1) {
+        ## If only 2 responses, must fix a lambda: lambda1,lambda2,sigma2 but only 2 params
+        stop(sprintf("Number of allowed parameters is %i, number of parameters in the model is %i. \n Constrain the lambdas to be equal across the two responses. \n",
+                     n_error_param_allowed, n_error_param_to_estimate))
+      } else {
+        if (K2 == 2) {
+          ## If only 3 responses, must fix a lambda: lambda1,lambda2,lambda3,sigma1,sigma2,rho but only 5 params
+          stop(sprintf("Number of allowed parameters is %i, number of parameters in the model is %i. \n Consider imposing equality on at least two lambdas. \n",
+                       n_error_param_allowed, n_error_param_to_estimate))
+        } else {
+          if (obj$cor_structure$name %in% c("cor_equi", "cor_general")) {
+            stop("Model is not identifiable due to the lack of conditional indepencence requirements in the cor_struct object. \n Consider imposing further constraints on lambda or choosing a suitable correlation structure for the Gaussian responses (e.g., cor_ident or cor_ar1). \n")
+          }
+        }
+      }
+    }
   }
+
+  # if (n_error_param_allowed < n_error_param_to_estimate) {
+  #   stop(sprintf("Number of allowed parameters is %i, number of parameters in the model is %i. \n Consider imposing further constraints on lambda or choosing a more parsimonious correlation structure for the Gaussian responses (if more than one are available). \n",
+  #                n_error_param_allowed, n_error_param_to_estimate))
+  # } else {
+  #   cat(sprintf("Number of allowed parameters is %i, number of parameters in the model is %i. OK. \n",
+  #                n_error_param_allowed, n_error_param_to_estimate))
+  # }
 
 
   ###### Setup dimensions: ###### 
